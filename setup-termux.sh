@@ -17,11 +17,22 @@ if [ -z "$TERMUX_VERSION" ] && [ ! -d "/data/data/com.termux" ]; then
 fi
 
 # 2. Update packages and install prerequisites
-echo "📦 Step 1/5: Upgrading packages & installing prerequisites (libc++, Node.js, OpenSSH, Termux API)..."
+echo "📦 Step 1/5: Upgrading packages & installing prerequisites (libc++, Node.js, OpenSSH, Cloudflare Tunnel, Termux API)..."
 pkg update -y
 pkg upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" || true
-pkg install -y libc++ openssh termux-api
+pkg install -y libc++ openssh termux-api cloudflared || pkg install -y libc++ openssh termux-api
 pkg install -y nodejs-lts || pkg install -y nodejs
+
+# Verify cloudflared or fetch binary
+if ! command -v cloudflared >/dev/null 2>&1; then
+  echo "🌐 Downloading Cloudflare Quick Tunnel binary for Android..."
+  ARCH=$(uname -m)
+  mkdir -p "$DIR/bin"
+  if [ "$ARCH" = "aarch64" ]; then
+    curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64" -o "$DIR/bin/cloudflared" || true
+    chmod +x "$DIR/bin/cloudflared" 2>/dev/null || true
+  fi
+fi
 
 # 3. Setup Android Storage Permissions
 echo ""

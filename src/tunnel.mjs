@@ -40,7 +40,7 @@ function findCloudflared() {
 function startCloudflareTunnel(port) {
   return new Promise((resolve, reject) => {
     const binary = findCloudflared();
-    const child = spawn(binary, ['tunnel', '--url', `http://127.0.0.1:${port}`], {
+    const child = spawn(binary, ['tunnel', '--no-autoupdate', '--url', `http://127.0.0.1:${port}`], {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -50,9 +50,9 @@ function startCloudflareTunnel(port) {
       if (!settled) {
         settled = true;
         child.kill('SIGTERM');
-        reject(new Error('Cloudflare tunnel timed out after 18s'));
+        reject(new Error('Cloudflare tunnel timed out after 25s'));
       }
-    }, 18000);
+    }, 25000);
 
     const onData = (data) => {
       const text = data.toString();

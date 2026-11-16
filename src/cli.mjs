@@ -218,13 +218,14 @@ async function handleOpen(rawArgs) {
       console.log(`  🔑 Passkey:     \x1b[33m${masterPassword}\x1b[0m`);
     }
     console.log(border);
-    console.log('  🔗 UPLOAD LINK (Send to her):');
+    console.log(`  🌐 Tunnel:      ${tunnelInstance.type}`);
+    console.log('  🔗 CLOUDFLARE INTERNET LINK (Send to her):');
     console.log(`  \x1b[36;1m${publicLink}\x1b[0m`);
     console.log(border);
     if (copied) {
-      console.log('  ✔ Link automatically copied to clipboard!');
+      console.log('  ✔ Internet link automatically copied to your clipboard!');
     }
-    console.log(`  📱 Host Portal: \x1b[35m${portalLink}\x1b[0m\n`);
+    console.log(`  📱 Host Dashboard (Only for your phone): \x1b[35m${portalLink}\x1b[0m\n`);
 
     const termRows = process.stdout.rows || 24;
     if (!isTermux && termRows >= 34) {
