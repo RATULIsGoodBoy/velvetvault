@@ -17,9 +17,11 @@ if [ -z "$TERMUX_VERSION" ] && [ ! -d "/data/data/com.termux" ]; then
 fi
 
 # 2. Update packages and install prerequisites
-echo "📦 Step 1/5: Installing prerequisites (Node.js, OpenSSH, Termux API)..."
-pkg update -y || apt-get update -y
-pkg install -y nodejs openssh termux-api || apt-get install -y nodejs openssh-client
+echo "📦 Step 1/5: Upgrading packages & installing prerequisites (libc++, Node.js, OpenSSH, Termux API)..."
+pkg update -y
+pkg upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" || true
+pkg install -y libc++ openssh termux-api
+pkg install -y nodejs-lts || pkg install -y nodejs
 
 # 3. Setup Android Storage Permissions
 echo ""
