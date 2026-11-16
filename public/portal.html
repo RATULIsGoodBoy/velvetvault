@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VelvetVault — Host Control Portal</title>
+  <link rel="stylesheet" href="/public/style.css">
+  <style>
+    .portal-container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .status-online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-offline {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-rose);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .link-copy-box {
+      display: flex;
+      gap: 10px;
+      background: rgba(0,0,0,0.3);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+    .link-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #38bdf8;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      padding: 8px 12px;
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .copy-btn {
+      background: linear-gradient(135deg, var(--accent-rose), var(--accent-crimson));
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .copy-btn.copied {
+      background: #10b981;
+    }
+    .qr-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+    }
+    .qr-frame {
+      background: #fff;
+      padding: 12px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      margin-bottom: 12px;
+    }
+    .qr-img {
+      display: block;
+      width: 180px;
+      height: 180px;
+    }
+    .privacy-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      font-size: 12px;
+      color: #a7f3d0;
+      line-height: 1.5;
+    }
+    .privacy-box strong { color: #fff; display: block; margin-bottom: 4px; font-size: 13px; }
+    .path-code {
+      background: rgba(0,0,0,0.4);
+      color: #f1f5f9;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      word-break: break-all;
+    }
+    .gallery-panel {
+      margin-top: 10px;
+    }
+    .password-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+    .password-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+    }
+    .btn-unlock {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-unlock:hover { background: var(--accent-rose); border-color: var(--accent-rose); }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .photo-card {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .photo-card:hover { transform: scale(1.02); border-color: var(--accent-rose); }
+    .photo-thumb { width: 100%; height: 100%; object-fit: cover; }
+    .photo-badge-note {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(244, 63, 94, 0.9);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .photo-size {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.7);
+      color: #cbd5e1;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .stop-btn {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--border-glow);
+      color: var(--accent-rose);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .stop-btn:hover { background: var(--accent-rose); color: #fff; }
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.96);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .lightbox-box {
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+    }
+    .lightbox-note {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--accent-rose);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-style: italic;
+    }
+    .lightbox-btn-bar { display: flex; gap: 12px; }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <!-- Header -->
+    <header class="portal-header">
+      <div class="brand">
+        <div class="lock-glow">✨</div>
+        <div class="brand-text">
+          <h1>VelvetVault Host Portal</h1>
+          <span class="p2p-badge">Self-Hosted Localhost Control</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="status-pill status-online" id="statusPill">
+          <span class="timer-dot"></span>
+          <span id="sessionStatus">ONLINE · <span id="countdown">--:--</span></span>
+        </div>
+        <button type="button" class="stop-btn" id="stopVaultBtn">🛑 Shut Down Vault</button>
+      </div>
+    </header>
+
+    <!-- Top Grid: Link & QR Code -->
+    <div class="grid-2col">
+      <!-- Link & Details Panel -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>🔗 Public Upload Link for GF</span>
+          <span class="badge" id="photoCountBadge">0 Received</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
+          Send this one-time link to her on Signal/iMessage. When she opens it, she can take or select photos directly from her phone.
+        </p>
+
+        <div class="link-copy-box">
+          <input type="text" class="link-input" id="publicLinkInput" readonly value="Loading upload link...">
+          <button type="button" class="copy-btn" id="copyLinkBtn">
+            <span id="copyIcon">📋</span>
+            <span id="copyText">Copy Link</span>
+          </button>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between;">
+          <span>Home Wi-Fi Link: <code class="path-code" id="localLinkCode">http://...</code></span>
+          <span>SSL: HTTPS Valid</span>
+        </div>
+
+        <!-- Privacy & AI-Proof Storage Info -->
+        <div class="privacy-box">
+          <strong>🛡️ AI-Proof Storage & Encryption Guarantee</strong>
+          <p>
+            Media is saved to designated path:<br>
+            <code class="path-code" id="storagePathCode">~/.velvetvault-storage/inbox</code><br>
+            Protected with <strong>AES-256-GCM encryption</strong>. Files are stored outside the AI workspace with <code class="path-code">chmod 0700</code> so no AI assistant, scanner, or external process can view them.
+          </p>
+        </div>
+      </div>
+
+      <!-- QR Code Panel -->
+      <div class="panel qr-center">
+        <div class="panel-title" style="width: 100%; text-align: left; margin-bottom: 4px;">
+          <span>📱 Scan on Phone</span>
+        </div>
+        <div class="qr-frame">
+          <img id="qrImg" class="qr-img" alt="QR Code" src="">
+        </div>
+        <p style="font-size: 11px; color: var(--text-dim);">
+          Scan with her iPhone/Android camera to open uploader instantly
+        </p>
+      </div>
+    </div>
+
+    <!-- Private Gallery Panel -->
+    <div class="panel gallery-panel">
+      <div class="panel-title">
+        <span>📸 Private Photos & Media</span>
+        <button type="button" class="btn-unlock" onclick="loadSessions()">🔄 Refresh</button>
+      </div>
+
+      <!-- Master Password Decryption Input -->
+      <div class="password-bar" id="passwordBar">
+        <span>🔑</span>
+        <input type="password" class="password-input" id="masterPasswordInput" placeholder="Enter Master Password to decrypt photos (if prompted)...">
+        <button type="button" class="btn-unlock" id="applyPasswordBtn">Unlock Photos</button>
+      </div>
+
+      <!-- Photo Grid -->
+      <div class="photo-grid" id="photoGrid">
+        <div style="color: var(--text-muted); font-size: 13px; grid-column: 1/-1; padding: 24px; text-align: center;">
+          No photos received yet. When she uploads, they will appear here in real time!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox hidden" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <div class="lightbox-box">
+      <div id="mediaBox"></div>
+      <div class="lightbox-note hidden" id="lightboxNote"></div>
+      <div class="lightbox-btn-bar">
+        <a class="copy-btn" id="downloadBtn" download style="text-decoration:none;">⬇️ Save Original</a>
+        <button type="button" class="stop-btn" onclick="deleteActivePhoto()">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPhotos = [];
+    let activeIndex = -1;
+    let masterPassword = sessionStorage.getItem('vv_pwd') || '';
+
+    if (masterPassword) {
+      document.getElementById('masterPasswordInput').value = masterPassword;
+    }
+
+    document.getElementById('applyPasswordBtn').addEventListener('click', () => {
+      masterPassword = document.getElementById('masterPasswordInput').value.trim();
+      sessionStorage.setItem('vv_pwd', masterPassword);
+      loadSessions();
+    });
+
+    // Copy Link Button
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const publicLinkInput = document.getElementById('publicLinkInput');
+    const copyText = document.getElementById('copyText');
+    const copyIcon = document.getElementById('copyIcon');
+
+    copyLinkBtn.addEventListener('click', async () => {
+      const link = publicLinkInput.value;
+      if (!link) return;
+      try {
+        await navigator.clipboard.writeText(link);
+        copyLinkBtn.classList.add('copied');
+        copyText.textContent = 'Copied! 💖';
+        copyIcon.textContent = '✓';
+        setTimeout(() => {
+          copyLinkBtn.classList.remove('copied');
+          copyText.textContent = 'Copy Link';
+          copyIcon.textContent = '📋';
+        }, 2500);
+      } catch (err) {
+        publicLinkInput.select();
+        document.execCommand('copy');
+        alert('Copied to clipboard!');
+      }
+    });
+
+    // Stop Vault Button
+    document.getElementById('stopVaultBtn').addEventListener('click', async () => {
+      if (confirm('Shut down VelvetVault and close the tunnel now?')) {
+        await fetch('/api/lock', { method: 'POST' });
+        window.location.reload();
+      }
+    });
+
+    // Format Seconds
+    function formatTime(sec) {
+      if (sec <= 0) return '00:00';
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Load Portal Info (QR, Links, Storage Path)
+    async function loadPortalInfo() {
+      try {
+        const res = await fetch('/api/admin/portal-info');
+        const data = await res.json();
+
+        publicLinkInput.value = data.publicLink || 'Session inactive';
+        document.getElementById('localLinkCode').textContent = data.localLink || 'N/A';
+        document.getElementById('storagePathCode').textContent = data.sessionDir || data.storageDir;
+
+        if (data.qrDataUrl) {
+          document.getElementById('qrImg').src = data.qrDataUrl;
+        }
+
+        if (data.active) {
+          document.getElementById('countdown').textContent = formatTime(data.remainingSeconds);
+        } else {
+          document.getElementById('statusPill').className = 'status-pill status-offline';
+          document.getElementById('sessionStatus').textContent = 'OFFLINE / SEALED';
+        }
+
+        if (data.masterPassword && !masterPassword) {
+          masterPassword = data.masterPassword;
+          document.getElementById('masterPasswordInput').value = data.masterPassword;
+          sessionStorage.setItem('vv_pwd', data.masterPassword);
+          loadSessions();
+        }
+
+        document.getElementById('photoCountBadge').textContent = `${data.totalFiles} Received`;
+      } catch (e) {}
+    }
+
+    // Load Sessions & Photos
+    async function loadSessions() {
+      const grid = document.getElementById('photoGrid');
+      try {
+        const url = `/api/admin/sessions${masterPassword ? `?password=${encodeURIComponent(masterPassword)}` : ''}`;
+        const res = await fetch(url, {
+          headers: masterPassword ? { 'x-vault-password': masterPassword } : {}
+        });
+        const data = await res.json();
+        currentPhotos = [];
+
+        let allFiles = [];
+        (data.sessions || []).forEach(sess => {
+          sess.files.forEach(f => allFiles.push({ ...f, sessionId: sess.id }));
+        });
+
+        currentPhotos = allFiles;
+
+        if (allFiles.length === 0) {
+          grid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; grid-column: 1/-1; padding: 24px; text-align: center;">No photos in vault yet.</div>';
+          return;
+        }
+
+        let html = '';
+        allFiles.forEach((file, idx) => {
+          const mediaUrl = `/api/admin/media/${file.sessionId}/${encodeURIComponent(file.filename)}${masterPassword ? `?password=${encodeURIComponent(masterPassword)}` : ''}`;
+          const isVideo = file.mimeType.startsWith('video/');
+
+          html += `
+            <div class="photo-card" onclick="openLightbox(${idx})">
+              ${isVideo
+                ? `<video class="photo-thumb" src="${mediaUrl}#t=0.5" muted></video>`
+                : `<img class="photo-thumb" src="${mediaUrl}" alt="photo" loading="lazy">`}
+              ${file.note ? `<div class="photo-badge-note">💌 Note</div>` : ''}
+              <div class="photo-size">${file.formattedSize}</div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+      } catch (err) {
+        grid.innerHTML = `<div style="color: #f43f5e; grid-column: 1/-1; text-align: center;">Error loading photos: ${err.message}</div>`;
+      }
+    }
+
+    // Lightbox
+    function openLightbox(idx) {
+      if (idx < 0 || idx >= currentPhotos.length) return;
+      activeIndex = idx;
+      const file = currentPhotos[idx];
+      const mediaUrl = `/api/admin/media/${file.sessionId}/${encodeURIComponent(file.filename)}${masterPassword ? `?password=${encodeURIComponent(masterPassword)}` : ''}`;
+      const mediaBox = document.getElementById('mediaBox');
+      const lightboxNote = document.getElementById('lightboxNote');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (file.mimeType.startsWith('video/')) {
+        mediaBox.innerHTML = `<video class="lightbox-img" src="${mediaUrl}" controls autoplay></video>`;
+      } else {
+        mediaBox.innerHTML = `<img class="lightbox-img" src="${mediaUrl}" alt="media">`;
+      }
+
+      if (file.note) {
+        lightboxNote.textContent = `"${file.note}"`;
+        lightboxNote.classList.remove('hidden');
+      } else {
+        lightboxNote.classList.add('hidden');
+      }
+
+      downloadBtn.href = mediaUrl;
+      downloadBtn.download = file.originalName || file.filename.replace(/\.enc$/, '');
+
+      document.getElementById('lightbox').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.add('hidden');
+      document.getElementById('mediaBox').innerHTML = '';
+      activeIndex = -1;
+    }
+
+    async function deleteActivePhoto() {
+      if (activeIndex === -1) return;
+      const file = currentPhotos[activeIndex];
+      if (!confirm(`Delete ${file.originalName || file.filename}?`)) return;
+
+      await fetch(`/api/admin/media/${file.sessionId}/${encodeURIComponent(file.filename)}`, { method: 'DELETE' });
+      closeLightbox();
+      loadSessions();
+    }
+
+    // SSE Realtime Updates
+    function connectEvents() {
+      const es = new EventSource('/api/events');
+      es.addEventListener('tick', (e) => {
+        try {
+          const d = JSON.parse(e.data);
+          document.getElementById('countdown').textContent = formatTime(d.remainingSeconds);
+        } catch (_) {}
+      });
+      es.addEventListener('upload-received', () => {
+        loadPortalInfo();
+        loadSessions();
+      });
+      es.addEventListener('session-expired', () => {
+        document.getElementById('statusPill').className = 'status-pill status-offline';
+        document.getElementById('sessionStatus').textContent = 'SEALED / EXPIRED';
+      });
+    }
+
+    loadPortalInfo();
+    loadSessions();
+    connectEvents();
+  </script>
+</body>
+</html>

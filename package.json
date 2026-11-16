@@ -1,0 +1,31 @@
+{
+  "name": "velvetvault",
+  "version": "2.0.0",
+  "description": "Ephemeral, self-hosted, privacy-first photo drop web application for Android (Termux) & Linux",
+  "type": "module",
+  "main": "src/cli.mjs",
+  "bin": {
+    "vault": "src/cli.mjs"
+  },
+  "scripts": {
+    "start": "node src/cli.mjs open",
+    "vault": "node src/cli.mjs",
+    "test": "node src/test.mjs"
+  },
+  "keywords": [
+    "self-hosted",
+    "privacy",
+    "termux",
+    "android",
+    "photo-drop",
+    "ephemeral",
+    "encryption"
+  ],
+  "author": "RATULIsGoodBoy",
+  "license": "MIT",
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

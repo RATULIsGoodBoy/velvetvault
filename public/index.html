@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VelvetVault — Private Drop</title>
+  <link rel="stylesheet" href="/public/style.css">
+  <meta name="theme-color" content="#090a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="lock-glow">🔒</div>
+        <div class="brand-text">
+          <h1>VelvetVault</h1>
+          <span class="p2p-badge">Direct PC Link</span>
+        </div>
+      </div>
+      <div class="timer-badge" id="timerBadge">
+        <span class="timer-dot"></span>
+        <span id="countdownText">--:--</span>
+      </div>
+    </header>
+
+    <!-- Privacy Banner -->
+    <div class="privacy-banner">
+      <div class="banner-icon">🛡️</div>
+      <div class="banner-content">
+        <strong>Self-Hosted & Zero Cloud</strong>
+        <p>Photos transfer directly to his PC. Zero cloud storage. EXIF location data stripped automatically.</p>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+      <!-- Action Buttons -->
+      <div class="action-grid">
+        <label class="action-card camera-card">
+          <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment">
+          <div class="card-icon">📸</div>
+          <div class="card-title">Take Photo / Video</div>
+          <div class="card-sub">Open camera directly</div>
+        </label>
+
+        <label class="action-card library-card">
+          <input type="file" id="libraryInput" accept="image/*,video/*" multiple>
+          <div class="card-icon">🖼️</div>
+          <div class="card-title">Choose from Gallery</div>
+          <div class="card-sub">Select multiple files</div>
+        </label>
+      </div>
+
+      <!-- Queue Section (Shown when files selected) -->
+      <div class="queue-section hidden" id="queueSection">
+        <div class="queue-header">
+          <div class="queue-title">
+            <span>Selected Items</span>
+            <span class="badge" id="queueCount">0</span>
+          </div>
+          <button type="button" class="blur-toggle-btn" id="blurToggleBtn">
+            <span id="blurIcon">🙈</span>
+            <span id="blurText">Privacy Blur ON</span>
+          </button>
+        </div>
+
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <!-- Note Field -->
+        <div class="note-box">
+          <textarea id="noteInput" placeholder="Attach a secret note or caption... (optional)" rows="2" maxlength="500"></textarea>
+        </div>
+
+        <!-- Upload Button & Progress -->
+        <div class="upload-action-box">
+          <button type="button" class="send-btn" id="sendBtn">
+            <span class="send-icon">🔒</span>
+            <span id="sendBtnText">Send to Vault</span>
+          </button>
+
+          <div class="progress-bar-container hidden" id="progressContainer">
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-status" id="progressStatus">Uploading... 0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Card (Shown after successful upload) -->
+      <div class="success-card hidden" id="successCard">
+        <div class="heart-pulse">💖</div>
+        <h2>Delivered Securely!</h2>
+        <p id="successMessage">Saved safely to his private drive.</p>
+        <div class="success-actions">
+          <button type="button" class="btn-more" id="uploadMoreBtn">Send More</button>
+          <button type="button" class="btn-lock" id="lockVaultBtn">Lock Vault Now 🔒</button>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="safety-tips">
+        <div class="tip-item">⚡ Window automatically closes when timer expires.</div>
+        <div class="tip-item">🧹 Incognito mode recommended for zero local traces.</div>
+      </div>
+    </main>
+
+    <!-- Locked / Expired Fullscreen Overlay -->
+    <div class="locked-overlay hidden" id="lockedOverlay">
+      <div class="locked-box">
+        <div class="locked-icon">🔒</div>
+        <h2>Vault is Locked</h2>
+        <p id="lockReason">This session has expired. The direct connection has been shut down.</p>
+        <div class="badge-safe">Session Closed</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/app.js"></script>
+</body>
+</html>

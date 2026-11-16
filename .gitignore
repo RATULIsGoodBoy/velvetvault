@@ -1,0 +1,17 @@
+node_modules/
+.vault-session.json
+.velvetvault-session.json
+vault-storage/
+uploads/
+temp/
+*.log
+.DS_Store
+bin/cloudflared*
+.env
+.env.*
+*.enc
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.mov

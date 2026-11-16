@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VelvetVault — Private Host Gallery</title>
+  <meta name="theme-color" content="#090a0f">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card: #13151f;
+      --card-hover: #1c1f2e;
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.3);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand h1 { font-size: 22px; font-weight: 700; color: #fff; }
+    .badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .actions { display: flex; gap: 10px; }
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--card-hover); border-color: var(--rose); }
+    .btn-danger { color: #f43f5e; }
+    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+    .session-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+    }
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .session-title { font-size: 16px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .session-meta { font-size: 12px; color: var(--muted); }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .thumb-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .thumb-item:hover { transform: scale(1.02); border-color: var(--rose); }
+    .thumb-img { width: 100%; height: 100%; object-fit: cover; }
+    .has-note {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(244, 63, 94, 0.85);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .thumb-size {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.7);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .lightbox.hidden { display: none; }
+    .lightbox-content {
+      max-width: 90vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .lightbox-media {
+      max-width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .lightbox-note {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--rose);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-style: italic;
+      text-align: center;
+    }
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-prev { left: 24px; }
+    .lightbox-next { right: 24px; }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .lightbox-actions {
+      display: flex;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <h1>VelvetVault</h1>
+      <span class="badge">Localhost Private Storage</span>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="loadSessions()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <main class="container" id="sessionsContainer">
+    <div class="empty-state">Loading private storage...</div>
+  </main>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox hidden" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1)">❮</button>
+    <button class="lightbox-nav lightbox-next" onclick="navLightbox(1)">❯</button>
+
+    <div class="lightbox-content">
+      <div id="mediaContainer"></div>
+      <div class="lightbox-note hidden" id="lightboxNote"></div>
+      <div class="lightbox-actions">
+        <a class="btn" id="lightboxDownload" download>⬇️ Save File</a>
+        <button class="btn btn-danger" onclick="deleteActiveMedia()">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allMedia = [];
+    let activeIndex = -1;
+
+    async function loadSessions() {
+      const container = document.getElementById('sessionsContainer');
+      try {
+        const res = await fetch('/api/admin/sessions');
+        const data = await res.json();
+        allMedia = [];
+
+        if (!data.sessions || data.sessions.length === 0) {
+          container.innerHTML = '<div class="empty-state">No photos received yet. Start a session to receive files.</div>';
+          return;
+        }
+
+        let html = '';
+        data.sessions.forEach(session => {
+          if (session.files.length === 0) return;
+          const date = new Date(session.time).toLocaleString();
+          html += `
+            <div class="session-card">
+              <div class="session-header">
+                <div class="session-title">
+                  <span>📁 Session ${session.id}</span>
+                  ${session.isCurrent ? '<span class="badge">Active Now</span>' : ''}
+                </div>
+                <div class="session-meta">${date} · ${session.files.length} items</div>
+              </div>
+              <div class="gallery-grid">
+          `;
+
+          session.files.forEach(file => {
+            const mediaIndex = allMedia.length;
+            allMedia.push({ ...file, sessionId: session.id });
+            const mediaUrl = `/api/admin/media/${session.id}/${encodeURIComponent(file.filename)}`;
+            const isVideo = file.mimeType.startsWith('video/');
+
+            html += `
+              <div class="thumb-item" onclick="openLightbox(${mediaIndex})">
+                ${isVideo
+                  ? `<video class="thumb-img" src="${mediaUrl}#t=0.5" muted></video>`
+                  : `<img class="thumb-img" src="${mediaUrl}" alt="media" loading="lazy">`}
+                ${file.note ? `<div class="has-note">💌 Note</div>` : ''}
+                <div class="thumb-size">${file.formattedSize}</div>
+              </div>
+            `;
+          });
+
+          html += `</div></div>`;
+        });
+
+        container.innerHTML = html || '<div class="empty-state">No media found in sessions.</div>';
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state" style="color:#f43f5e">Error loading sessions: ${err.message}</div>`;
+      }
+    }
+
+    function openLightbox(index) {
+      if (index < 0 || index >= allMedia.length) return;
+      activeIndex = index;
+      const item = allMedia[index];
+      const mediaUrl = `/api/admin/media/${item.sessionId}/${encodeURIComponent(item.filename)}`;
+      const mediaContainer = document.getElementById('mediaContainer');
+      const lightboxNote = document.getElementById('lightboxNote');
+      const lightboxDownload = document.getElementById('lightboxDownload');
+
+      const isVideo = item.mimeType.startsWith('video/');
+      if (isVideo) {
+        mediaContainer.innerHTML = `<video class="lightbox-media" src="${mediaUrl}" controls autoplay></video>`;
+      } else {
+        mediaContainer.innerHTML = `<img class="lightbox-media" src="${mediaUrl}" alt="media">`;
+      }
+
+      if (item.note) {
+        lightboxNote.textContent = `"${item.note}"`;
+        lightboxNote.classList.remove('hidden');
+      } else {
+        lightboxNote.classList.add('hidden');
+      }
+
+      lightboxDownload.href = mediaUrl;
+      lightboxDownload.download = item.originalName || item.filename;
+
+      document.getElementById('lightbox').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.add('hidden');
+      document.getElementById('mediaContainer').innerHTML = '';
+      activeIndex = -1;
+    }
+
+    function navLightbox(direction) {
+      const nextIndex = activeIndex + direction;
+      if (nextIndex >= 0 && nextIndex < allMedia.length) {
+        openLightbox(nextIndex);
+      }
+    }
+
+    async function deleteActiveMedia() {
+      if (activeIndex === -1) return;
+      const item = allMedia[activeIndex];
+      if (!confirm(`Permanently delete ${item.originalName || item.filename}?`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/media/${item.sessionId}/${encodeURIComponent(item.filename)}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          closeLightbox();
+          loadSessions();
+        } else {
+          alert('Delete failed.');
+        }
+      } catch (e) {
+        alert('Delete error: ' + e.message);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') navLightbox(-1);
+      if (e.key === 'ArrowRight') navLightbox(1);
+    });
+
+    loadSessions();
+  </script>
+</body>
+</html>
