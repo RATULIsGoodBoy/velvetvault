@@ -80,9 +80,8 @@ export function sendNotification(title, message) {
 export function copyToClipboard(text) {
   try {
     if (isTermux) {
-      const proc = exec('termux-clipboard-set 2>/dev/null');
-      proc.stdin.write(text);
-      proc.stdin.end();
+      const safe = text.replace(/"/g, '\\"');
+      exec(`termux-clipboard-set "${safe}" 2>/dev/null`, () => {});
       return true;
     }
 

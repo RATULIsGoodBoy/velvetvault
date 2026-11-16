@@ -198,36 +198,45 @@ async function handleOpen(rawArgs) {
       sessionDir: serverInstance.session.sessionDir
     }, null, 2));
 
+    // Save link file to home directory for easy retrieval
+    try {
+      const linkFile = path.join(os.homedir(), 'vault-link.txt');
+      await fsp.writeFile(linkFile, publicLink + '\n', 'utf8');
+    } catch (_) {}
+
     console.clear();
-    console.log('═'.repeat(68));
-    console.log('  ✨ VELVETVAULT — EPHEMERAL PRIVATE PHOTO DROP');
-    console.log('═'.repeat(68));
-    console.log(`  📱 Platform:        ${isTermux ? 'Android (Termux)' : 'Linux Desktop'}`);
-    console.log(`  ⏱️  Duration:        ${durationArg} (Closes automatically)`);
-    console.log(`  🌐 Tunnel Type:     ${tunnelInstance.type}`);
-    console.log(`  🔗 Upload Link:     \x1b[36m${publicLink}\x1b[0m`);
-    if (copied) {
-      console.log(`     \x1b[32m✔ Link automatically copied to clipboard!\x1b[0m`);
-    }
-    console.log(`  💻 Host Web Portal: \x1b[35m${portalLink}\x1b[0m`);
-    console.log(`  🏠 Local Wi-Fi:     ${localLink}`);
-    console.log(`  📂 Destination:     \x1b[33m${serverInstance.session.sessionDir}\x1b[0m`);
-    const encText = noEncrypt
-      ? '\x1b[32mDisabled: Saved as standard .jpg / .mp4 directly (Viewable in Gallery)\x1b[0m'
-      : '\x1b[33mEnabled (AES-256-GCM .enc encrypted at rest)\x1b[0m';
-    console.log(`  🛡️  Encryption:      ${encText}`);
+    const termCols = process.stdout.columns || 44;
+    const border = '═'.repeat(Math.min(termCols, 52));
+
+    console.log(border);
+    console.log('  ✨ VELVETVAULT ACTIVE');
+    console.log(border);
+    console.log(`  ⏱️  Duration:   ${durationArg}`);
+    console.log(`  📂 Saving to:   ${serverInstance.session.sessionDir}`);
+    console.log(`  🛡️  Mode:        ${noEncrypt ? 'Normal .jpg/.mp4 (Gallery)' : 'AES-256 Encrypted'}`);
     if (!noEncrypt) {
-      console.log(`  🔑 Master Passkey:  \x1b[33m${masterPassword}\x1b[0m`);
+      console.log(`  🔑 Passkey:     \x1b[33m${masterPassword}\x1b[0m`);
     }
-    console.log('═'.repeat(68));
+    console.log(border);
+    console.log('  🔗 UPLOAD LINK (Send to her):');
+    console.log(`  \x1b[36;1m${publicLink}\x1b[0m`);
+    console.log(border);
+    if (copied) {
+      console.log('  ✔ Link automatically copied to clipboard!');
+    }
+    console.log(`  📱 Host Portal: \x1b[35m${portalLink}\x1b[0m\n`);
 
-    console.log('\n  📱 QR Code for your GF to scan with her phone camera:\n');
-    qrcode.generate(publicLink, { small: true });
+    const termRows = process.stdout.rows || 24;
+    if (!isTermux && termRows >= 34) {
+      console.log('  📱 QR Code for your GF to scan with her phone:\n');
+      qrcode.generate(publicLink, { small: true });
+      console.log('');
+    } else {
+      console.log('  💡 Tip: Open Host Portal in browser to view QR & gallery.');
+      console.log('  💡 Tip: Tap & hold link above to copy, or run "vault link".\n');
+    }
 
-    console.log('\n  💡 Tip: Open Host Portal in browser to view QR code and photos:');
-    console.log(`     \x1b[35m${portalLink}\x1b[0m\n`);
-
-    // Live terminal countdown timer
+    // Live terminal countdown timer — strictly stays on ONE line, never wraps
     timerInterval = setInterval(() => {
       const remainingSec = (serverInstance.session.expiresAt - Date.now()) / 1000;
       if (remainingSec <= 0) {
@@ -235,8 +244,8 @@ async function handleOpen(rawArgs) {
         return;
       }
       const count = serverInstance.session.totalFiles;
-      const encBadge = noEncrypt ? 'Plain Files' : 'AES Encrypted';
-      process.stdout.write(`\r  ⏱️  [ ${formatTime(remainingSec)} remaining ] | 📸 ${count} photo${count === 1 ? '' : 's'} received (${encBadge})`);
+      const timeStr = formatTime(remainingSec);
+      process.stdout.write(`\r\x1b[2K  ⏱️  [ ${timeStr} ]  📸 ${count} photo${count === 1 ? '' : 's'}`);
     }, 1000);
 
   } catch (err) {
@@ -315,6 +324,47 @@ async function handlePortal() {
     server.close();
     process.exit(0);
   });
+}
+
+async function handleLink() {
+  if (!existsSync(SESSION_FILE)) {
+    console.log('\n❌ No active vault session found. Run "vault open" first.\n');
+    return;
+  }
+  try {
+    const session = JSON.parse(readFileSync(SESSION_FILE, 'utf8'));
+    if (!session.publicLink) {
+      console.log('\n❌ No public link available in active session.\n');
+      return;
+    }
+    const copied = copyToClipboard(session.publicLink);
+    console.log('\n🔗 VelvetVault Upload Link:');
+    console.log(`\x1b[36;1m${session.publicLink}\x1b[0m\n`);
+    if (copied) {
+      console.log('✔ Copied to clipboard!\n');
+    }
+  } catch (err) {
+    console.error('Error reading session:', err.message);
+  }
+}
+
+async function handleQR() {
+  if (!existsSync(SESSION_FILE)) {
+    console.log('\n❌ No active vault session found. Run "vault open" first.\n');
+    return;
+  }
+  try {
+    const session = JSON.parse(readFileSync(SESSION_FILE, 'utf8'));
+    if (!session.publicLink) {
+      console.log('\n❌ No public link available in active session.\n');
+      return;
+    }
+    console.log('\n📱 Scan QR Code with Phone Camera:\n');
+    qrcode.generate(session.publicLink, { small: true });
+    console.log(`\n🔗 ${session.publicLink}\n`);
+  } catch (err) {
+    console.error('Error reading session:', err.message);
+  }
 }
 
 async function handleExport(rawArgs) {
@@ -410,6 +460,8 @@ Usage: vault [command] [options]
 
 Commands:
   open [duration] [folder] [options]   Start vault session (e.g. 20m, 1h, forever)
+  link                                 Show and copy upload link of active session
+  qr                                   Display scan-able QR code of active session
   portal                               Open local Web Portal (Copy link, QR code, and photos)
   export [folder]                      Decrypt all photos and save to a normal folder
   close                                Stop active session and close tunnel immediately
@@ -424,6 +476,7 @@ Examples:
   vault open 20m
   vault open 30m ~/storage/shared/Pictures/Vault --no-encrypt
   vault open forever --no-encrypt
+  vault link
   vault export ~/Pictures/SavedPhotos
   vault portal
   vault close
@@ -435,6 +488,15 @@ switch (command) {
   case 'open':
   case 'start':
     handleOpen(args.slice(1));
+    break;
+  case 'link':
+  case 'url':
+  case 'copy':
+    handleLink();
+    break;
+  case 'qr':
+  case 'qrcode':
+    handleQR();
     break;
   case 'close':
   case 'stop':
